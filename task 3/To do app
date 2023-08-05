@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>To-Do App</title>
+  <style>
+   body {
+    font-family: Arial, sans-serif;
+      margin: 0;
+      
+      align-items: center;
+      display: flex;
+      flex-direction: column;
+      background-image:url("https://file.kreditings.com/uploads/preview/light-cb-editing-new-background-download-full-hd-11663607132cgs2zpktlv.jpg");
+    
+   
+ 
+  
+}
+
+h1 {
+  text-align: center;
+  background-color: #ffffff;
+  padding: 10px;
+  border-radius: 5px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+form {
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+input[type="text"] {
+  padding: 8px;
+  font-size: 16px;
+}
+
+button {
+  padding: 8px 16px;
+  font-size: 16px;
+  text-align: center;
+  align-items: center;
+  background-color: #4caf50;
+  color: #ffffff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+button:hover {
+  background-color: #45a049;
+}
+
+ul {
+  list-style-type: none;
+  padding: 0;
+  text-align: center;
+  align-items: center;
+}
+
+li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  text-align: center;
+  background-color: #ffffff;
+  padding: 10px;
+  border-radius: 5px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  animation-name: fadeIn;
+  animation-duration: 0.5s;
+  animation-fill-mode: both;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.completed {
+  text-decoration: line-through;
+  opacity: 0.5;
+  text-align: center;
+  align-items: center;
+}
+
+#filter-buttons {
+  margin-bottom: 10px;
+  text-align: center;
+  align-items: center;
+}
+
+.active {
+  font-weight: bold;
+  text-align: center;
+  align-items: center;
+  background-color: #4caf50;
+  color: #ffffff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.filter-completed {
+  text-align: center;
+  align-items: center;
+}
+
+#clear-completed {
+  background-color: #f44336;
+  color: #ffffff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+#clear-completed:hover {
+  background-color: #d32f2f;
+}
+
+
+  </style>
+</head>
+<body>
+  <h1>To-Do List</h1>
+  <form id="todo-form">
+    <input type="text" id="todo-input" placeholder="Add a new task">
+    <button type="submit">Add</button>
+  </form>
+  <ul id="todo-list"></ul>
+  <div id="filter-buttons">
+    <button id="filter-all" class="active">All</button>
+    <button id="filter-active">Active</button>
+    <button id="filter-completed">Completed</button>
+  </div>
+  <div>
+  <button id="clear-completed">Clear Completed</button>
+  </div>
+  <script>
+   
+const form = document.getElementById('todo-form');
+const input = document.getElementById('todo-input');
+const list = document.getElementById('todo-list');
+const filterAll = document.getElementById('filter-all');
+const filterActive = document.getElementById('filter-active');
+const filterCompleted = document.getElementById('filter-completed');
+const clearCompleted = document.getElementById('clear-completed');
+
+
+form.addEventListener('submit', function(e) {
+  e.preventDefault(); 
+
+  const task = input.value.trim();
+
+  if (task !== '') {
+    
+    const listItem = document.createElement('li');
+    listItem.innerHTML = `
+      <span class="task-text">${task}</span>
+      <button class="delete-button">Delete</button>
+    `;
+
+
+    const taskText = listItem.querySelector('.task-text');
+    taskText.addEventListener('click', function() {
+      listItem.classList.toggle('completed');
+      updateLocalStorage();
+    });
+
+    
+    const deleteButton = listItem.querySelector('.delete-button');
+    deleteButton.addEventListener('click', function() {
+      listItem.remove();
+      updateLocalStorage();
+    });
+
+ 
+    list.appendChild(listItem);
+
+    input.value = '';
+
+    updateLocalStorage();
+  }
+});
+
+
+filterAll.addEventListener('click', function() {
+  showAllTasks();
+  filterButtonsActiveState(this);
+});
+
+filterActive.addEventListener('click', function() {
+  showActiveTasks();
+  filterButtonsActiveState(this);
+});
+
+filterCompleted.addEventListener('click', function() {
+  showCompletedTasks();
+  filterButtonsActiveState(this);
+});
+
+
+clearCompleted.addEventListener('click', function() {
+  const completedItems = list.getElementsByClassName('completed');
+  while (completedItems.length > 0) {
+    completedItems[0].remove();
+  }
+  updateLocalStorage();
+});
+
+window.addEventListener('load', function() {
+  const tasks = JSON.parse(localStorage.getItem('tasks'));
+  if (tasks) {
+    tasks.forEach(function(task) {
+      const listItem = document.createElement('li');
+      listItem.innerHTML = `
+        <span class="task-text">${task.text}</span>
+        <button class="delete-button">Delete</button>
+      `;
+      if (task.completed) {
+        listItem.classList.add('completed');
+      }
+
+      const taskText = listItem.querySelector('.task-text');
+      taskText.addEventListener('click', function() {
+        listItem.classList.toggle('completed');
+        updateLocalStorage();
+      });
+
+      const deleteButton = listItem.querySelector('.delete-button');
+      deleteButton.addEventListener('click', function() {
+        listItem.remove();
+        updateLocalStorage();
+      });
+
+      list.appendChild(listItem);
+    });
+  }
+});
+
+
+function updateLocalStorage() {
+  const tasks = [];
+  const taskItems = list.getElementsByTagName('li');
+  for (let i = 0; i < taskItems.length; i++) {
+    const taskText = taskItems[i].querySelector('.task-text').innerText;
+    const completed = taskItems[i].classList.contains('completed');
+    tasks.push({ text: taskText, completed: completed });
+  }
+  localStorage.setItem('tasks', JSON.stringify(tasks));
+}
+
+// Function to show all tasks
+function showAllTasks() {
+  const taskItems = list.getElementsByTagName('li');
+  for (let i = 0; i < taskItems.length; i++) {
+    taskItems[i].style.display = 'flex';
+  }
+}
+
+
+function showActiveTasks() {
+  const taskItems = list.getElementsByTagName('li');
+  for (let i = 0; i < taskItems.length; i++) {
+    if (taskItems[i].classList.contains('completed')) {
+      taskItems[i].style.display = 'none';
+    } else {
+      taskItems[i].style.display = 'flex';
+    }
+  }
+}
+
+
+function showCompletedTasks() {
+  const taskItems = list.getElementsByTagName('li');
+  for (let i = 0; i < taskItems.length; i++) {
+    if (taskItems[i].classList.contains('completed')) {
+      taskItems[i].style.display = 'flex';
+    } else {
+      taskItems[i].style.display = 'none';
+    }
+  }
+}
+
+function filterButtonsActiveState(activeButton) {
+  filterAll.classList.remove('active');
+  filterActive.classList.remove('active');
+  filterCompleted.classList.remove('active');
+  activeButton.classList.add('active');
+}
+
+
+  </script>
+</body>
+</html>
